@@ -67,15 +67,15 @@ export default function DietTab() {
     ];
 
     useEffect(() => {
-        const total = meals.reduce((sum, meal) => sum + (meal.kcal || 0), 0);
+        const total = meals.reduce((sum, meal) => sum + Number(meal.kcal || 0), 0);
         setIntakeCalories(total);
 
         const nutrientSum = meals.reduce(
             (acc, meal) => {
                 if (meal.nutrients) {
-                    acc.carbs += parseInt(meal.nutrients.carbs);
-                    acc.protein += parseInt(meal.nutrients.protein);
-                    acc.fat += parseInt(meal.nutrients.fat);
+                    acc.carbs += parseInt(meal.nutrients.carbs, 10) || 0;
+                    acc.protein += parseInt(meal.nutrients.protein, 10) || 0;
+                    acc.fat += parseInt(meal.nutrients.fat, 10) || 0;
                 }
                 return acc;
             },
@@ -111,11 +111,11 @@ export default function DietTab() {
             <div className="bg-white p-4 rounded-lg shadow mb-4">
                 <div className="flex justify-between mb-2">
                     <span>섭취한 칼로리</span>
-                    <span className="font-semibold">{intakeCalories} kcal</span>
+                    <span className="font-semibold">{intakeCalories.toLocaleString()} kcal</span>
                 </div>
                 <div className="flex justify-between mb-2">
                     <span>남은 칼로리</span>
-                    <span className="font-semibold">{remaining} kcal</span>
+                    <span className="font-semibold">{remaining.toLocaleString()} kcal</span>
                 </div>
                 <div className="h-3 bg-gray-200 rounded-full mt-2 overflow-hidden">
                     <div
