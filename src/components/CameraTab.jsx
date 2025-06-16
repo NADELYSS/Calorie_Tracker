@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const mealTimes = ['아침', '점심', '저녁', '간식'];
 
@@ -12,79 +12,108 @@ export default function CameraTab() {
         return saved ? JSON.parse(saved) : [];
     });
     const [expandedIndex, setExpandedIndex] = useState(null);
-
-    const cameraInputRef = useRef(null);
-    const fileInputRef = useRef(null);
+    const [loading, setLoading] = useState(false);
+    const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => {
         localStorage.setItem('meals', JSON.stringify(mealRecords));
     }, [mealRecords]);
 
-    const handleImageUpload = async (file) => {
-        if (!file) return;
-
+    const analyzeImage = async (imageBase64) => {
+        setLoading(true);
+        setAnalysisDone(false);
         setCameraContent(
-            <div className="camera-overlay">
-                <div className="flex flex-col items-center">
-                    <svg className="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <p className="mt-2">GPT 분석 중...</p>
-                </div>
+            <div className="camera-overlay flex flex-col items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-900 mb-2"></div>
+                <p className="text-sm text-gray-600">GPT 분석 중...</p>
             </div>
         );
 
-        const reader = new FileReader();
-        const base64 = await new Promise((resolve) => {
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-        });
+        try {
+            const res = await fetch('http://localhost:4000/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64 }),
+            });
 
-        const res = await fetch("http://localhost:4000/analyze-image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageBase64: base64 }),
-        });
+            const data = await res.json();
 
-        const data = await res.json();
-        const text = data.result || "분석 실패";
+            if (!data.result) {
+                alert("GPT 응답이 없습니다.");
+                return;
+            }
 
-        const nameMatch = text.match(/이 음식은\s(.+?)입니다/);
-        const name = nameMatch?.[1]?.trim() || "알 수 없음";
+            const content = data.result;
 
-        const kcalMatch = text.match(/칼로리.*?(\d+)/);
-        const carbsMatch = text.match(/탄수화물.*?(\d+)/);
-        const proteinMatch = text.match(/단백질.*?(\d+)/);
-        const fatMatch = text.match(/지방.*?(\d+)/);
+            const nameMatch = content.match(/이 음식은\s(.+?)입니다/);
+            const name = nameMatch?.[1] || '음식';
 
-        const result = {
-            name,
-            kcal: kcalMatch?.[1] || '??',
-            nutrients: {
-                carbs: carbsMatch?.[1] ? carbsMatch[1] + 'g' : '??',
-                protein: proteinMatch?.[1] ? proteinMatch[1] + 'g' : '??',
-                fat: fatMatch?.[1] ? fatMatch[1] + 'g' : '??',
-            },
-        };
+            const kcalMatch = content.match(/칼로리(?:는|:)?\s*약?\s*(\d+)/i);
+            const kcal = kcalMatch ? parseInt(kcalMatch[1]) : 0;
 
-        setCurrentFood(result);
-        setAnalysisDone(true);
-        setCameraContent(
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                <div className="text-center">
-                    <p className="text-2xl mb-2">{result.name}</p>
+            const carbsMatch = content.match(/탄수화물(?:은|:)?\s*약?\s*(\d+)/i);
+            const carbs = carbsMatch ? parseInt(carbsMatch[1]) : 0;
+
+            const proteinMatch = content.match(/단백질(?:은|:)?\s*약?\s*(\d+)/i);
+            const protein = proteinMatch ? parseInt(proteinMatch[1]) : 0;
+
+            const fatMatch = content.match(/지방(?:은|:)?\s*약?\s*(\d+)/i);
+            const fat = fatMatch ? parseInt(fatMatch[1]) : 0;
+
+            const foodData = {
+                name,
+                kcal,
+                emoji: '🍽️',
+                nutrients: {
+                    carbs: `${carbs}g`,
+                    protein: `${protein}g`,
+                    fat: `${fat}g`,
+                },
+            };
+
+            setCurrentFood(foodData);
+            setAnalysisDone(true);
+            setCameraContent(
+                <div className="flex justify-center items-center h-full bg-gray-100">
+                    <img
+                        src={imageBase64}
+                        alt="분석 이미지"
+                        className="max-h-full max-w-full object-contain rounded-lg"
+                    />
                 </div>
-            </div>
-        );
+            );
+        } catch (err) {
+            alert('분석 실패: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
+    const handleTakePhoto = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment';
+        input.onchange = (e) => handleImageUpload(e);
+        input.click();
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result;
+            setImagePreview(base64String);
+            analyzeImage(base64String);
+        };
+        reader.readAsDataURL(file);
+    };
 
     const saveMeal = () => {
         if (!selectedTime) {
-            alert('식사 시간대를 선택해주세요.');
+            alert("식사 시간대를 선택해주세요.");
             return;
         }
 
@@ -93,14 +122,15 @@ export default function CameraTab() {
             name: currentFood.name,
             kcal: currentFood.kcal,
             nutrients: currentFood.nutrients,
+            image: imagePreview, // ✅ 이미지 저장
         };
 
-        const updated = [newMeal, ...mealRecords];
-        setMealRecords(updated);
-        setAnalysisDone(false);
-        setSelectedTime('');
+        setMealRecords([newMeal, ...mealRecords]);
         setCurrentFood(null);
+        setSelectedTime('');
+        setAnalysisDone(false);
         setCameraContent(null);
+        setImagePreview(null);
     };
 
     const toggleExpand = (index) => {
@@ -119,53 +149,37 @@ export default function CameraTab() {
 
             <div className="camera-container bg-gray-200 h-64 mb-4 rounded-xl overflow-hidden relative">
                 {cameraContent || (
-                    <div className="camera-overlay flex flex-col items-center justify-center h-full text-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <p>사진을 촬영하려면 클릭하세요</p>
+                    <div className="camera-overlay text-gray-500 flex flex-col items-center justify-center h-full">
+                        <p>사진을 선택하면 분석이 시작됩니다</p>
                     </div>
                 )}
             </div>
 
             <div className="flex space-x-2 mb-4">
                 <button
-                    onClick={() => cameraInputRef.current.click()}
+                    onClick={handleTakePhoto}
                     className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1"
                 >
                     📷 사진 촬영
                 </button>
                 <button
-                    onClick={() => fileInputRef.current.click()}
+                    onClick={() => document.getElementById('fileInput').click()}
                     className="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg flex-1"
                 >
                     🖼️ 갤러리
                 </button>
+                <input
+                    type="file"
+                    accept="image/*"
+                    id="fileInput"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                />
             </div>
 
-            <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                ref={cameraInputRef}
-                onChange={(e) => handleImageUpload(e.target.files[0])}
-                className="hidden"
-            />
-            <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={(e) => handleImageUpload(e.target.files[0])}
-                className="hidden"
-            />
-
             {analysisDone && currentFood && (
-                <div className="bg-gray-100 rounded-lg p-4 mb-4">
-                    <h3 className="font-semibold text-lg mb-2">분석 결과</h3>
+                <div className="bg-white rounded-lg p-4 mb-4 shadow">
+                    <h3 className="font-semibold text-lg mb-2">분석 결과 (1인분 or 1조각 기준)</h3>
                     <div className="flex justify-between mb-1">
                         <span>{currentFood.name}</span>
                         <span className="font-bold">약 {currentFood.kcal} kcal</span>
@@ -216,8 +230,12 @@ export default function CameraTab() {
                                 className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm cursor-pointer"
                             >
                                 <div className="flex items-center">
-                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3 text-lg">
-                                        <span>🍽️</span>
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3 text-lg overflow-hidden">
+                                        {meal.image ? (
+                                            <img src={meal.image} alt="썸네일" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span>{meal.emoji}</span>
+                                        )}
                                     </div>
                                     <div>
                                         <p className="font-medium">{meal.time}</p>
