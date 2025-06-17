@@ -48,23 +48,23 @@ export default function CameraTab() {
     };
 
     const parseResult = (text) => {
-        const nameMatch = text.match(/이 음식은 (.+?)입니다/);
-        const kcalMatch = text.match(/칼로리.*?(\d+)/);
-        const carbsMatch = text.match(/탄수화물.*?(\d+)/);
-        const proteinMatch = text.match(/단백질.*?(\d+)/);
-        const fatMatch = text.match(/지방.*?(\d+)/);
+        const nameMatch = text.match(/이 음식은\s*(.*?)입니다/);
+        const kcalMatch = text.match(/칼로리:.*?(\d+)\s?kcal/);
+        const carbsMatch = text.match(/탄수화물:.*?(\d+)\s?g/);
+        const proteinMatch = text.match(/단백질:.*?(\d+)\s?g/);
+        const fatMatch = text.match(/지방:.*?(\d+)\s?g/);
 
         return {
-            name: nameMatch?.[1] || '이름 없음',
-            kcal: parseInt(kcalMatch?.[1] || '0'),
+            name: nameMatch ? nameMatch[1] : '이름 없음',
+            kcal: kcalMatch ? parseInt(kcalMatch[1]) : 0,
             nutrients: {
-                carbs: `${carbsMatch?.[1] || '0'}g`,
-                protein: `${proteinMatch?.[1] || '0'}g`,
-                fat: `${fatMatch?.[1] || '0'}g`
+                carbs: carbsMatch ? parseInt(carbsMatch[1]) : 0,
+                protein: proteinMatch ? parseInt(proteinMatch[1]) : 0,
+                fat: fatMatch ? parseInt(fatMatch[1]) : 0,
             },
-            image
         };
     };
+
 
     const handleImage = (file) => {
         const reader = new FileReader();
