@@ -59,6 +59,8 @@ app.post('/analyze-image', async (req, res) => {
     }
 });
 
-app.listen(4000, () => {
-    console.log("✅ GPT API 서버 실행 중 → http://localhost:4000");
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+    console.log(`✅ GPT API 서버 실행 중 → http://localhost:${PORT}`);
 });
