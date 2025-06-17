@@ -45,7 +45,7 @@ export default function CameraTab() {
             setStatusMessage("GPT 분석 중...");
             setAnalysisDone(false);
 
-            const res = await fetch('/api/analyze', {
+            const res = await fetch('/api/analyze-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ imageBase64 })
