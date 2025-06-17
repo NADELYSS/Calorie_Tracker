@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from 'react';
 
+// 식사 시간 옵션
 const mealTimes = ['아침', '점심', '저녁', '간식'];
 
 export default function CameraTab() {
-    const [image, setImage] = useState(null);
-    const [statusMessage, setStatusMessage] = useState("사진을 촬영하려면 클릭하세요");
-    const [loading, setLoading] = useState(false);
-    const [analysisDone, setAnalysisDone] = useState(false);
-    const [rawGPT, setRawGPT] = useState('');
-    const [result, setResult] = useState(null);
-    const [selectedTime, setSelectedTime] = useState('');
+    // 상태 정의
+    const [image, setImage] = useState(null); // 촬영된 이미지
+    const [statusMessage, setStatusMessage] = useState("사진을 촬영하려면 클릭하세요"); // 상태 메시지
+    const [loading, setLoading] = useState(false); // 로딩 여부
+    const [analysisDone, setAnalysisDone] = useState(false); // 분석 완료 여부
+    const [rawGPT, setRawGPT] = useState(''); // GPT 원본 응답
+    const [result, setResult] = useState(null); // 분석 결과 저장
+    const [selectedTime, setSelectedTime] = useState(''); // 선택된 식사 시간
     const [mealRecords, setMealRecords] = useState(() => {
+        // 로컬스토리지에서 식사 기록 불러오기
         const saved = localStorage.getItem('meals');
         return saved ? JSON.parse(saved) : [];
     });
-    const [expandedIndex, setExpandedIndex] = useState(null);
+    const [expandedIndex, setExpandedIndex] = useState(null); // 상세 정보 확장 상태
 
+    // 식사 기록 업데이트 시 로컬스토리지 저장
     useEffect(() => {
         localStorage.setItem('meals', JSON.stringify(mealRecords));
     }, [mealRecords]);
 
-    // Parsing GPT result
+    // GPT 응답 파싱 함수
     const parseResult = (text) => {
         const nameMatch = text.match(/이 음식은\s*(.+?)\s*(입니다|입니다\.)/);
         const kcalMatch = text.match(/칼로리[:\s]*약?\s*(\d+)/i);
@@ -39,6 +43,7 @@ export default function CameraTab() {
         };
     };
 
+    // GPT 분석 요청 함수
     const analyzeImageWithGPT = async (imageBase64) => {
         try {
             setLoading(true);
@@ -71,6 +76,7 @@ export default function CameraTab() {
         }
     };
 
+    // 이미지 파일 선택 처리
     const handleImage = (file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -81,6 +87,7 @@ export default function CameraTab() {
         reader.readAsDataURL(file);
     };
 
+    // 식사 기록 저장
     const saveMeal = () => {
         if (!selectedTime || !result) return;
         const newMeal = {
@@ -99,10 +106,12 @@ export default function CameraTab() {
         setStatusMessage("사진을 촬영하려면 클릭하세요");
     };
 
+    // 상세 정보 토글
     const toggleExpand = (idx) => {
         setExpandedIndex(prev => prev === idx ? null : idx);
     };
 
+    // 식사 기록 삭제
     const deleteMeal = (idx) => {
         setMealRecords(records => records.filter((_, i) => i !== idx));
         if (expandedIndex === idx) setExpandedIndex(null);
@@ -112,6 +121,7 @@ export default function CameraTab() {
         <div>
             <h2 className="text-lg font-semibold mb-4">음식 사진 분석</h2>
 
+            {/* 이미지 영역 및 상태 표시 */}
             <div className="bg-gray-100 h-64 mb-4 rounded-lg flex items-center justify-center overflow-hidden">
                 {loading ? (
                     <div className="flex flex-col items-center">
@@ -125,6 +135,7 @@ export default function CameraTab() {
                 )}
             </div>
 
+            {/* 사진 업로드 버튼 */}
             <div className="flex space-x-2 mb-4">
                 <label className="flex-1">
                     <div className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-center">
@@ -140,6 +151,7 @@ export default function CameraTab() {
                 </label>
             </div>
 
+            {/* 분석 결과 출력 */}
             {analysisDone && result && (
                 <div className="bg-white rounded-lg p-4 shadow mb-4">
                     <h3 className="font-semibold text-lg mb-2">분석 결과</h3>
@@ -162,6 +174,7 @@ export default function CameraTab() {
                 </div>
             )}
 
+            {/* 저장된 식사 기록 */}
             <div className="bg-blue-50 rounded-lg p-4">
                 <h3 className="font-semibold mb-2">식사 기록</h3>
                 {mealRecords.map((meal, idx) => (

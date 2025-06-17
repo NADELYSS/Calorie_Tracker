@@ -1,9 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 
+// 커뮤니티 게시판 컴포넌트
 export default function CommunityTab() {
-    const { userId } = useContext(UserContext); // ✅ Context에서 유저 ID 가져오기
+    // 사용자 ID 가져오기
+    const { userId } = useContext(UserContext);
 
+    // 게시물 상태 관리
     const [posts, setPosts] = useState([
         {
             id: 1,
@@ -27,12 +30,14 @@ export default function CommunityTab() {
         },
     ]);
 
+    // 좋아요, 댓글, 검색, 업로드 관련 상태
     const [liked, setLiked] = useState({});
     const [expandedComments, setExpandedComments] = useState({});
     const [activeTag, setActiveTag] = useState('');
     const [tagSearch, setTagSearch] = useState('');
     const [showUploader, setShowUploader] = useState(false);
 
+    // 새 게시물 입력 상태
     const [newPost, setNewPost] = useState({
         image: '',
         title: '',
@@ -41,8 +46,11 @@ export default function CommunityTab() {
     });
 
     const [commentInputs, setCommentInputs] = useState({});
+
+    // 추천 해시태그 리스트
     const hashtagList = ['#저탄고지', '#헬시푸드', '#다이어트식단', '#단백질충전', '#운동식단', '#간편식'];
 
+    // 좋아요 토글
     const toggleLike = (id) => {
         setLiked((prev) => ({ ...prev, [id]: !prev[id] }));
         setPosts((prevPosts) =>
@@ -54,10 +62,12 @@ export default function CommunityTab() {
         );
     };
 
+    // 댓글 표시 토글
     const toggleComments = (id) => {
         setExpandedComments((prev) => ({ ...prev, [id]: !prev[id] }));
     };
 
+    // 댓글 등록
     const handleCommentSubmit = (id) => {
         const newComment = commentInputs[id];
         if (!newComment) return;
@@ -72,6 +82,7 @@ export default function CommunityTab() {
         setCommentInputs((prev) => ({ ...prev, [id]: '' }));
     };
 
+    // 게시글 업로드 처리
     const handlePostSubmit = () => {
         if (!userId || !newPost.image || !newPost.title || !newPost.description) return;
 
@@ -81,7 +92,7 @@ export default function CommunityTab() {
 
         const post = {
             id: Date.now(),
-            user: userId, // ✅ Context의 userId 사용
+            user: userId,
             image: newPost.image,
             title: newPost.title,
             description: newPost.description,
@@ -95,6 +106,7 @@ export default function CommunityTab() {
         setShowUploader(false);
     };
 
+    // 해시태그 검색 필터
     const filteredPosts = posts.filter((post) =>
         activeTag
             ? post.hashtags.includes(activeTag)
@@ -105,7 +117,7 @@ export default function CommunityTab() {
         <div className="space-y-6">
             <h2 className="text-lg font-semibold">커뮤니티 식단 공유</h2>
 
-            {/* 🔍 검색창 */}
+            {/* 해시태그 검색 입력창 */}
             <div className="flex gap-2 items-center">
                 <input
                     type="text"
@@ -125,7 +137,7 @@ export default function CommunityTab() {
                 </button>
             </div>
 
-            {/* 🏷️ 추천 해시태그 */}
+            {/* 추천 해시태그 리스트 */}
             <div className="flex flex-wrap gap-2">
                 {hashtagList.map((tag) => (
                     <button
@@ -144,7 +156,7 @@ export default function CommunityTab() {
                 ))}
             </div>
 
-            {/* 📤 업로드 버튼 */}
+            {/* 업로드 토글 버튼 */}
             <button
                 onClick={() => setShowUploader(!showUploader)}
                 className="mt-4 mb-2 px-4 py-2 bg-green-500 text-white text-sm rounded-full shadow"
@@ -152,7 +164,7 @@ export default function CommunityTab() {
                 {showUploader ? '업로드 닫기' : '📤 게시물 업로드'}
             </button>
 
-            {/* 📝 업로드 폼 */}
+            {/* 업로드 폼 */}
             {showUploader && (
                 <div className="bg-white p-5 rounded-2xl shadow-lg space-y-3 border border-gray-200">
                     <h3 className="font-bold text-sm">새 게시물 업로드</h3>
@@ -205,7 +217,7 @@ export default function CommunityTab() {
                         <h3 className="font-semibold text-base">{post.title}</h3>
                         <p className="text-sm text-gray-700 mb-2">{post.description}</p>
 
-                        {/* 해시태그 */}
+                        {/* 해시태그 표시 */}
                         <div className="mb-2 flex flex-wrap gap-1 text-xs text-blue-600">
                             {post.hashtags.map((tag) => (
                                 <span
@@ -221,7 +233,7 @@ export default function CommunityTab() {
                             ))}
                         </div>
 
-                        {/* 좋아요 & 댓글 */}
+                        {/* 좋아요와 댓글 버튼 */}
                         <div className="flex items-center justify-between">
                             <button
                                 onClick={() => toggleLike(post.id)}

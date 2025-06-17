@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
+// 식단 탭 컴포넌트 정의
 export default function DietTab() {
+    // 상태값 초기화: 목표 칼로리, 섭취 칼로리, 영양소, 선택된 추천 식단
     const [goalCalories, setGoalCalories] = useState(2000);
     const [intakeCalories, setIntakeCalories] = useState(0);
     const [nutrients, setNutrients] = useState({ carbs: 0, protein: 0, fat: 0 });
     const [selectedRecommend, setSelectedRecommend] = useState(null);
 
+    // 저장된 섭취 식단 불러오기
     const meals = JSON.parse(localStorage.getItem('meals')) || [];
 
+    // 추천 식단 리스트
     const recommendedMeals = [
         {
             name: '에그 샌드위치',
@@ -66,6 +70,7 @@ export default function DietTab() {
         },
     ];
 
+    // 섭취 칼로리와 영양소 총합 계산
     useEffect(() => {
         const total = meals.reduce((sum, meal) => sum + Number(meal.kcal || 0), 0);
         setIntakeCalories(total);
@@ -85,14 +90,17 @@ export default function DietTab() {
         setNutrients(nutrientSum);
     }, [meals]);
 
+    // 남은 칼로리 계산
     const remaining = Math.max(goalCalories - intakeCalories, 0);
+
+    // 진행바 백분율 계산
     const percentage = (value) => Math.min((value / goalCalories) * 100, 100);
 
     return (
         <div>
             <h2 className="text-lg font-semibold mb-4">식단 정보</h2>
 
-            {/* 목표 칼로리 */}
+            {/* 목표 칼로리 설정 */}
             <div className="bg-white p-4 rounded-lg shadow mb-4">
                 <label className="block mb-2 font-medium">목표 칼로리</label>
                 <input
@@ -107,7 +115,7 @@ export default function DietTab() {
                 <p className="mt-2 text-sm text-gray-700">{goalCalories} kcal</p>
             </div>
 
-            {/* 섭취 현황 */}
+            {/* 섭취 칼로리 및 남은 칼로리 표시 */}
             <div className="bg-white p-4 rounded-lg shadow mb-4">
                 <div className="flex justify-between mb-2">
                     <span>섭취한 칼로리</span>
@@ -125,7 +133,7 @@ export default function DietTab() {
                 </div>
             </div>
 
-            {/* 영양소 바 */}
+            {/* 탄단지 섭취량 그래프 */}
             <div className="bg-white p-4 rounded-lg shadow mb-4">
                 <p className="font-medium mb-2">영양소 섭취량</p>
                 <div className="mb-2">
@@ -148,7 +156,7 @@ export default function DietTab() {
                 </div>
             </div>
 
-            {/* 추천 식단 */}
+            {/* 추천 식단 리스트 */}
             <div className="bg-white p-4 rounded-lg shadow mb-2">
                 <p className="font-medium mb-2">추천 식단</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -165,7 +173,7 @@ export default function DietTab() {
                 </div>
             </div>
 
-            {/* 선택된 식단 상세 */}
+            {/* 선택한 식단 상세 정보 */}
             {selectedRecommend && (
                 <div className="bg-white p-5 rounded-lg shadow border border-blue-200 mt-4">
                     <p className="text-xl font-bold mb-2">{selectedRecommend.emoji} {selectedRecommend.name}</p>
@@ -184,7 +192,7 @@ export default function DietTab() {
                     </div>
 
                     <div className="mb-4">
-                        <p className="font-semibold text-sm mb-1">🧂 재료</p>
+                        <p className="font-semibold text-sm mb-1">재료</p>
                         <ul className="list-disc list-inside text-sm text-gray-600">
                             {selectedRecommend.recipe.ingredients.map((item, i) => (
                                 <li key={i}>{item}</li>
@@ -193,7 +201,7 @@ export default function DietTab() {
                     </div>
 
                     <div>
-                        <p className="font-semibold text-sm mb-1">🍳 조리 방법</p>
+                        <p className="font-semibold text-sm mb-1">조리 방법</p>
                         <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
                             {selectedRecommend.recipe.steps.map((step, i) => (
                                 <li key={i}>{step}</li>

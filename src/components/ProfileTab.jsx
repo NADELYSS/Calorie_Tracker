@@ -5,11 +5,13 @@ import { Chart, LineElement, CategoryScale, LinearScale, PointElement } from 'ch
 Chart.register(LineElement, CategoryScale, LinearScale, PointElement);
 
 export default function ProfileTab() {
+    // 사용자 ID를 Context에서 가져옴
     const { userId, setUserId } = useContext(UserContext);
 
+    // 사용자 기본 프로필 정보
     const [profile, setProfile] = useState({
         name: '조윤재',
-        status: '다이어트 중 · 목표: 5kg',
+        status: '체중 늘리기 · 목표: 5kg',
         height: 178,
         weight: 62,
         goalWeight: 67,
@@ -19,6 +21,7 @@ export default function ProfileTab() {
         posts: 0,
     });
 
+    // 수정 모드 상태와 수정 중인 데이터
     const [editMode, setEditMode] = useState(false);
     const [editProfile, setEditProfile] = useState({
         height: profile.height,
@@ -27,6 +30,7 @@ export default function ProfileTab() {
         activity: profile.activity,
     });
 
+    // 수정된 프로필 저장
     const saveProfile = () => {
         setProfile((prev) => ({
             ...prev,
@@ -35,13 +39,15 @@ export default function ProfileTab() {
         setEditMode(false);
     };
 
+    // BMI 계산
     const bmi = ((profile.weight / ((profile.height / 100) ** 2)).toFixed(1));
-    const bmiStatus =
-        bmi < 18.5 ? '저체중' : bmi < 25 ? '정상' : bmi < 30 ? '과체중' : '비만';
+    const bmiStatus = bmi < 18.5 ? '저체중' : bmi < 25 ? '정상' : bmi < 30 ? '과체중' : '비만';
 
+    // 체중 변화 데이터
     const weightData = [71, 70.5, 71.2, 72, 73, 72.6];
     const labels = ['1주 전', '6일 전', '5일 전', '3일 전', '어제', '오늘'];
 
+    // 최근 식단 3개 불러오기
     const meals = JSON.parse(localStorage.getItem('meals')) || [];
     const recentMeals = meals
         .slice()
@@ -51,7 +57,7 @@ export default function ProfileTab() {
 
     return (
         <div className="max-w-md mx-auto p-4 space-y-6">
-            {/* 상단 프로필 */}
+            {/* 프로필 상단 */}
             <div className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-xl p-6 text-center shadow space-y-2">
                 <div className="w-20 h-20 bg-blue-100 text-blue-700 rounded-full mx-auto flex items-center justify-center text-2xl font-bold">
                     {userId.slice(0, 2).toUpperCase()}
@@ -65,11 +71,12 @@ export default function ProfileTab() {
                 </div>
             </div>
 
-            {/* 내 정보 */}
+            {/* 내 정보 영역 */}
             <div className="bg-white rounded-xl shadow p-4 space-y-2">
                 <h3 className="font-semibold mb-1">내 정보</h3>
                 {editMode ? (
                     <div className="space-y-2 text-sm">
+                        {/* 정보 수정 인풋 */}
                         <div>
                             키:{' '}
                             <input
@@ -79,8 +86,7 @@ export default function ProfileTab() {
                                 onChange={(e) =>
                                     setEditProfile({ ...editProfile, height: Number(e.target.value) })
                                 }
-                            />{' '}
-                            cm
+                            /> cm
                         </div>
                         <div>
                             몸무게:{' '}
@@ -91,8 +97,7 @@ export default function ProfileTab() {
                                 onChange={(e) =>
                                     setEditProfile({ ...editProfile, weight: Number(e.target.value) })
                                 }
-                            />{' '}
-                            kg
+                            /> kg
                         </div>
                         <div>
                             목표 체중:{' '}
@@ -103,8 +108,7 @@ export default function ProfileTab() {
                                 onChange={(e) =>
                                     setEditProfile({ ...editProfile, goalWeight: Number(e.target.value) })
                                 }
-                            />{' '}
-                            kg
+                            /> kg
                         </div>
                         <div>
                             활동 수준:{' '}
@@ -137,6 +141,7 @@ export default function ProfileTab() {
                     </div>
                 ) : (
                     <>
+                        {/* 정보 표시 */}
                         <div className="text-sm space-y-1">
                             <div>키: {profile.height}cm</div>
                             <div>몸무게: {profile.weight}kg</div>
@@ -162,7 +167,7 @@ export default function ProfileTab() {
                 )}
             </div>
 
-            {/* 체중 변화 */}
+            {/* 체중 변화 차트 */}
             <div className="bg-white rounded-xl shadow p-4">
                 <h3 className="font-semibold mb-2">체중 변화</h3>
                 <div className="h-48">
@@ -191,7 +196,7 @@ export default function ProfileTab() {
                 </div>
             </div>
 
-            {/* 식단 기록 */}
+            {/* 최근 식단 기록 */}
             <div className="bg-white rounded-xl shadow p-4 space-y-2">
                 <h3 className="font-semibold">나의 식단 기록</h3>
                 {recentMeals.length === 0 && <p className="text-sm text-gray-500">식단 기록이 없습니다.</p>}
@@ -209,7 +214,7 @@ export default function ProfileTab() {
                 )}
             </div>
 
-            {/* 설정 */}
+            {/* 설정 메뉴 */}
             <div className="bg-white rounded-xl shadow p-4 space-y-1">
                 <h3 className="font-semibold mb-2">설정</h3>
 
