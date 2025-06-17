@@ -9,9 +9,9 @@ export default function ProfileTab() {
 
     const [profile, setProfile] = useState({
         name: '조윤재',
-        status: '다이어트 중 · 목표: 5kg 감량',
-        height: 175,
-        weight: 72,
+        status: '다이어트 중 · 목표: 5kg',
+        height: 178,
+        weight: 62,
         goalWeight: 67,
         activity: '보통',
         followers: 0,
